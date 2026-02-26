@@ -4,9 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* ═══════════════════════════════════════════════════════
-   CONSTANTES
-═══════════════════════════════════════════════════════ */
+
 #define CELL   80          /* taille d'une case en pixels        */
 #define BOARD  (CELL * 8)  /* largeur/hauteur du plateau          */
 #define WIN_H  (BOARD + 50)/* hauteur totale (plateau + barre)   */
@@ -25,9 +23,6 @@
 #define WHITE_C  1
 #define BLACK_C  2
 
-/* ═══════════════════════════════════════════════════════
-   STRUCTURES
-═══════════════════════════════════════════════════════ */
 typedef struct {
     int type;    /* EMPTY, PAWN, ROOK, ... */
     int color;   /* WHITE_C ou BLACK_C      */
@@ -38,24 +33,19 @@ typedef struct {
     int row, col;
 } Pos;
 
-/* ═══════════════════════════════════════════════════════
-   ÉTAT GLOBAL DU JEU
-═══════════════════════════════════════════════════════ */
-static Piece board[8][8];
-static int turn;           /* WHITE_C ou BLACK_C */
-static int sel_active;     /* 1 si une pièce est sélectionnée */
-static Pos  sel;           /* position sélectionnée */
 
-/* ═══════════════════════════════════════════════════════
-   MOUVEMENTS : liste de destinations possibles
-   Retourne le nombre de coups, remplit moves[]
-═══════════════════════════════════════════════════════ */
+static Piece board[8][8];
+static int turn;          
+static int sel_active;     
+static Pos  sel;           
+
+
 static int get_moves(Piece b[8][8], int r, int c, Pos moves[64])
 {
     Piece *p = &b[r][c];
     int n = 0;
 
-/* Macro utilitaire : ajoute (tr,tc) si hors pièce alliée */
+
 #define ADD(tr, tc) \
     do { \
         int _r=(tr), _c=(tc); \
@@ -66,7 +56,7 @@ static int get_moves(Piece b[8][8], int r, int c, Pos moves[64])
         } \
     } while(0)
 
-/* Macro pour pièces glissantes (tour, fou, dame) */
+
 #define SLIDE(dr, dc) \
     do { \
         for (int i=1;i<8;i++) { \
@@ -133,9 +123,7 @@ static int get_moves(Piece b[8][8], int r, int c, Pos moves[64])
     return n;
 }
 
-/* ═══════════════════════════════════════════════════════
-   VÉRIFICATION : case attaquée ?
-═══════════════════════════════════════════════════════ */
+/* VÉRIFICATION : si case attaquée ?*/
 static int is_attacked(Piece b[8][8], int r, int c, int by_color)
 {
     Pos tmp[64];
@@ -149,9 +137,7 @@ static int is_attacked(Piece b[8][8], int r, int c, int by_color)
     return 0;
 }
 
-/* ═══════════════════════════════════════════════════════
-   ROI EN ÉCHEC ?
-═══════════════════════════════════════════════════════ */
+/* ROI EN ÉCHEC ?*/
 static int king_in_check(Piece b[8][8], int color)
 {
     int kr=-1, kc=-1;
@@ -163,9 +149,7 @@ static int king_in_check(Piece b[8][8], int color)
     return is_attacked(b, kr, kc, opp);
 }
 
-/* ═══════════════════════════════════════════════════════
-   LE MOUVEMENT MET-IL LE ROI EN ÉCHEC ?
-═══════════════════════════════════════════════════════ */
+/*LE MOUVEMENT MET-IL LE ROI EN ÉCHEC ?*/
 static int would_be_in_check(Piece b[8][8], int fr, int fc, int tr, int tc, int color)
 {
     Piece tmp[8][8];
@@ -176,9 +160,7 @@ static int would_be_in_check(Piece b[8][8], int fr, int fc, int tr, int tc, int 
     return king_in_check(tmp, color);
 }
 
-/* ═══════════════════════════════════════════════════════
-   ROQUE SÉCURISÉ ? (le roi ne passe pas par une case attaquée)
-═══════════════════════════════════════════════════════ */
+/* ROQUE SÉCURISÉ ? (le roi ne passe pas par une case attaquée)*/
 static int castling_safe(Piece b[8][8], int r, int to_col, int color)
 {
     int opp = (color==WHITE_C) ? BLACK_C : WHITE_C;
@@ -191,9 +173,7 @@ static int castling_safe(Piece b[8][8], int r, int to_col, int color)
     return 1;
 }
 
-/* ═══════════════════════════════════════════════════════
-   Y A-T-IL AU MOINS UN COUP LÉGAL ?
-═══════════════════════════════════════════════════════ */
+/*Y A-T-IL AU MOINS UN COUP LÉGAL ?*/
 static int has_legal_moves(Piece b[8][8], int color)
 {
     Pos moves[64];
@@ -216,9 +196,7 @@ static int has_legal_moves(Piece b[8][8], int color)
     return 0;
 }
 
-/* ═══════════════════════════════════════════════════════
-   INITIALISATION DU PLATEAU
-═══════════════════════════════════════════════════════ */
+/* INITIALISATION DU PLATEAU*/
 static void init_board(void)
 {
     memset(board, 0, sizeof(board));
@@ -237,10 +215,8 @@ static void init_board(void)
     sel_active = 0;
 }
 
-/* ═══════════════════════════════════════════════════════
-   EXÉCUTER UN COUP (avec roque et promotion)
-   Retourne 1 si coup valide
-═══════════════════════════════════════════════════════ */
+/* EXÉCUTER UN COUP (avec roque et promotion)
+   Retourne 1 si coup valide*/
 static int do_move(int fr, int fc, int tr, int tc)
 {
     Piece *p = &board[fr][fc];
@@ -294,9 +270,6 @@ static int do_move(int fr, int fc, int tr, int tc)
     return 1;
 }
 
-/* ═══════════════════════════════════════════════════════
-   RENDU SDL2
-═══════════════════════════════════════════════════════ */
 
 /* Symboles Unicode des pièces */
 static const char *piece_symbol(int type, int color)
@@ -324,17 +297,8 @@ static const char *piece_symbol(int type, int color)
     return "";
 }
 
-/*
- * get_legal_moves : comme get_moves MAIS filtre les coups illegaux.
- *
- * Un coup est illegal si :
- *   - il laisse notre propre roi en echec  (would_be_in_check)
- *   - c'est un roque alors que le roi est deja en echec
- *     ou qu'il traverse une case attaquee  (castling_safe)
- *
- * C'est cette fonction qu'on utilise pour afficher les points verts :
- * on ne montre JAMAIS un coup qui laisserait le roi en danger.
- */
+
+
 static int get_legal_moves(Piece b[8][8], int r, int c, Pos out[64])
 {
     Pos raw[64];
@@ -347,25 +311,14 @@ static int get_legal_moves(Piece b[8][8], int r, int c, Pos out[64])
 
         /* --- Cas special : roque (roi bouge de 2 colonnes) --- */
         if (b[r][c].type == KING && abs(tc - c) == 2) {
-            /*
-             * Conditions pour que le roque soit legal :
-             *   1. Le roi ne doit PAS etre deja en echec
-             *   2. Le roi ne doit PAS traverser une case attaquee
-             *      (castling_safe verifie les 3 cases : depart, passage, arrivee)
-             * Si une condition echoue -> pas de point vert pour ce roque.
-             */
+         
             if (!king_in_check(b, color) && castling_safe(b, r, tc, color)) {
                 out[n].row = tr; out[n].col = tc; n++;
             }
         }
         /* --- Coup normal --- */
         else {
-            /*
-             * On simule le coup sur une copie du plateau.
-             * Si apres le coup notre roi est en echec -> coup illegal, pas de point vert.
-             * Cela couvre aussi le cas "roi en echec" : seuls les coups
-             * qui SORTENT le roi de l'echec passent ce filtre.
-             */
+          
             if (!would_be_in_check(b, r, c, tr, tc, color)) {
                 out[n].row = tr; out[n].col = tc; n++;
             }
@@ -386,11 +339,6 @@ static void render(SDL_Renderer *ren, TTF_Font *font_piece, TTF_Font *font_ui)
     SDL_SetRenderDrawColor(ren, 30, 30, 30, 255);
     SDL_RenderClear(ren);
 
-    /*
-     * Points verts = coups LEGAUX uniquement via get_legal_moves.
-     * Avant on appelait get_moves (coups bruts) ce qui affichait
-     * des cases interdites quand le roi etait en echec ou pour le roque.
-     */
     Pos hints[64];
     int nhints = 0;
     if (sel_active)
@@ -484,9 +432,7 @@ static void show_message(SDL_Renderer *ren, TTF_Font *font, const char *title, c
     SDL_Delay(2000);
 }
 
-/* ═══════════════════════════════════════════════════════
-   MAIN
-═══════════════════════════════════════════════════════ */
+
 int main(void)
 {
     /* ── Init SDL ── */
@@ -520,8 +466,6 @@ int main(void)
         return 1;
     }
 
-    /* ── Charger une police système qui supporte les symboles Unicode ── */
-    /* Essai de plusieurs polices disponibles sur Ubuntu */
     const char *font_paths[] = {
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
